@@ -6,7 +6,7 @@
 
 using namespace std;
 
-double f(double x) { return x * x - 2; }
+double f(double x) { return log(x) - 1; }
 
 string center(double val, int width) {
   ostringstream oss;
