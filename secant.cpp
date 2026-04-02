@@ -4,9 +4,15 @@
 
 using namespace std;
 
-double f(double x) { return exp(x) - cos(2 * x); }
-double df(double x) { return exp(x) + 2 * sin(2 * x); }
-double d2f(double x) { return exp (x) + 4 * cos(2 * x); }
+double mypow(double x, int n) {
+  double res = 1;
+  while (n--) res *= x;
+  return res;
+}
+
+double f(double x) { return mypow(x, 5) - 3 * mypow(x, 3) + 2 * x * x - x + 5;}
+double df(double x) { return 5*mypow(x, 4) - 9*x*x + 4*x - 1;}
+double d2f(double x) { return 20* mypow(x, 3) - 18*x + 4; }
 
 void solve(double a, double b, double epsilon) {
   double d, x_old;
@@ -19,8 +25,6 @@ void solve(double a, double b, double epsilon) {
     d = b;
     x_old = a;
   }
-
-  // 2. Tính m1 = min |f'(x)| trên [a, b]
   double m1 = min(abs(df(a)), abs(df(b)));
 
   cout << fixed << setprecision(10);
@@ -33,17 +37,15 @@ void solve(double a, double b, double epsilon) {
 
   int k = 1;
   while (true) {
-    // 3. Công thức lặp dây cung [cite: 47, 106]
     double x_new = x_old - (f(x_old) * (x_old - d)) / (f(x_old) - f(d));
-
-    // 4. Tính sai số mục tiêu
     double error = abs(f(x_new)) / m1;
-
+    // sai so tuong doi
+    double rel_error = (error / abs(x_new)) * 100;
     cout << setw(3) << k << setw(15) << x_old << setw(15) << x_new << setw(15)
-         << error << "\n";
-
-    // 5. Kiểm tra điều kiện dừng [cite: 59]
-    if (error <= epsilon) {
+         << rel_error << "\n";
+    // cout << setw(3) << k << setw(15) << x_old << setw(15) << x_new << setw(15)
+    //      << error << "\n";
+    if (rel_error <= 0.05) {
       cout << "----------------------------------------------------\n";
       cout << "Nghiem xap xi tim duoc: " << x_new << "\n";
       break;
