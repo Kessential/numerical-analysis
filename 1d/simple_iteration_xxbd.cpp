@@ -7,7 +7,7 @@
 
 using namespace std;
 
-double phi(double x) { return 17 / (pow(x, 4) + 25); }
+double phi(double x) { return 1 / sqrt(x + 3); }
 
 void solve(double x_0, double epsilon, double q) {
   if (q >= 1 || q <= 0) {

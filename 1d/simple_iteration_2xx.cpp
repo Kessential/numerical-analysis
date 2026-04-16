@@ -7,7 +7,7 @@
 
 using namespace std;
 
-double phi(double x) { return 17 / (pow(x, 4) + 25); }
+double phi(double x) { return (exp(x) + 7 ) / 10; }
 
 void solve(double x_0, double epsilon, double q) {
   if (q >= 1 || q <= 0) {
@@ -19,7 +19,7 @@ void solve(double x_0, double epsilon, double q) {
   double x_old = x_0, x_new;
   int n = 1;
 
-  cout << fixed << setprecision(8);
+  cout << fixed << setprecision(10);
   cout << setw(3) << "k"
        << setw(15) << "x_k"
        << setw(15) << "x_k+1"

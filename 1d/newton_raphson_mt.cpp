@@ -8,9 +8,9 @@
 
 using namespace std;
 
-double f(double x) { return exp(x) - 4 * cos(x / 2) + 1; }
-double df(double x) { return exp(x) + 2 * sin(x / 2); }
-double d2f(double x) { return exp(x) + cos(x / 2); }
+double f(double x) { return 2*x*x*x*x*x + 12*x*x*x*x -5*x*x*x + 7*x - 15; }
+double df(double x) { return 10*x*x*x*x + 48*x*x*x - 15*x*x + 7; }
+double d2f(double x) { return 40*x*x*x + 144*x*x - 30*x; }
 
 void solve(double a, double b, double epsilon) {
   double x_old;

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-double f(double x) { return log(x) - 1; }
+double f(double x) { return 1000 * x * x * x - 3000 * x * x + 804; }
 
 string center(double val, int width) {
   ostringstream oss;
@@ -61,7 +61,7 @@ void bisection(double a, double b, double epsilon) {
 int main() {
   ios::sync_with_stdio(false);
   cin.tie(nullptr);
-  double a, b, c, epsilon;
+  double a, b, epsilon;
   cin >> a >> b >> epsilon;
   bisection(a, b, epsilon);
 }
