@@ -1,3 +1,5 @@
+// PP chia đôi theo công thức sai số hậu no
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>

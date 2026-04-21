@@ -24,7 +24,7 @@ void printMatrix(const vector<vector<double>>& mat) {
 
 int main() {
     // 1. ĐỌC FILE DỮ LIỆU
-    string filename = "de2GK20242gts.txt" ; // Đặt tên file của bạn ở đây
+    string filename = "test.txt" ; // Đặt tên file của bạn ở đây
     ifstream file(filename);
 
     if (!file.is_open()) {
