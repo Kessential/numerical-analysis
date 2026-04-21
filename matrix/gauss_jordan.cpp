@@ -94,7 +94,6 @@ int main() {
             if (!row_used[r]) {
                 for (int c = 0; c < colsA; ++c) {
                     if (!col_used[c]) {
-                        // Kiểm tra xem trị tuyệt đối có xấp xỉ các số 1, 2, 4, 5 không
                         if (abs(abs(Aug[r][c]) - 1) < 1e-9) {
                             p = r;
                             q = c;
