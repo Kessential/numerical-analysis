@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
-#include <Eigen/Dense>
+#include <cmath>
+#include "Eigen/Dense"
 
 using namespace std;
 using namespace Eigen; // Sử dụng namespace của Eigen để code ngắn gọn hơn
@@ -13,9 +14,9 @@ const double TERM = (10 * PI - 3) / 3.0;
 Vector3d F(const Vector3d& X) {
     Vector3d f;
     double x1 = X(0), x2 = X(1), x3 = X(2);
-    f(0) = 3 * x1 - cos(x2 * x3) - 1.0 / 2;
-    f(1) = 4 * x1 * x1 - 625 * x2 * x2 + 2 * x2 - 1;
-    f(2) = exp(-x1 * x2) + 20 * x3 + TERM;
+    f(0) = 10 * x1 - 2 * x2 * x2 + x2 - 2 * x3 - 5;
+    f(1) = 8 * x2 * x2 + 4 * x3 * x3 - 9;
+    f(2) = 8 * x2 * x3 + 4;
     return f;
 }
 
@@ -23,17 +24,17 @@ Vector3d F(const Vector3d& X) {
 Matrix3d J(const Vector3d& X) {
     Matrix3d jacobi;
     double x1 = X(0), x2 = X(1), x3 = X(2);
-    jacobi(0, 0) = 3.0;
-    jacobi(0, 1) = x3 * sin(x2 * x3);
-    jacobi(0, 2) = x2 * sin(x2 * x3);
+    jacobi(0, 0) = 10.0;
+    jacobi(0, 1) = -4 * x2 + 1;
+    jacobi(0, 2) = -2.0;
 
-    jacobi(1, 0) = 8 * x1;
-    jacobi(1, 1) = -1250 * x2 + 2;
-    jacobi(1, 2) = 0;
+    jacobi(1, 0) = 0;
+    jacobi(1, 1) = 16 * x2;
+    jacobi(1, 2) = 8 * x3;
 
-    jacobi(2, 0) = -x2 * exp(-x1 * x2);
-    jacobi(2, 1) = -x1 * exp(-x1 * x2);
-    jacobi(2, 2) = 20.0;
+    jacobi(2, 0) = 0;
+    jacobi(2, 1) = 8 * x3;
+    jacobi(2, 2) = 8 * x2;
     return jacobi;
 }
 
