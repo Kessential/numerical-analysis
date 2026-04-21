@@ -24,58 +24,76 @@ void printMatrix(const vector<vector<double>>& mat) {
 }
 
 // ==========================================
-// HÀM: CHỈ CHẠY QUY TRÌNH THUẬN (Đưa về dạng bậc thang)
+// HÀM: CHỈ CHẠY QUY TRÌNH THUẬN (Bám sát Slide B1 - B8)
 // ==========================================
 void quyTrinhThuan(vector<vector<double>>& A, int m, int n) {
+    // B1: Khởi tạo i=0; j=0; ind (chuyển sang 0-based index)
     int i = 0, j = 0;
+    vector<int> ind(m, -1); // Khởi tạo -1 nghĩa là chưa có pivot
     int step = 1;
     
-    cout << "\n--- LICH SU CHON PHAN TU KHOA (PIVOT) ---\n";
+    cout << "\n--- LICH SU CHON PHAN TU KHOA (PIVOT) THEO SLIDE ---\n";
     
+    // Vòng lặp này bao trọn B3, B5, B8 (Điều kiện dừng)
     while (i < m && j < n) { 
-        // 1. Tìm phần tử trội (Partial Pivoting) để giảm sai số
-        int max_row = i;
-        for (int t = i + 1; t < m; ++t) {
-            if (abs(A[t][j]) > abs(A[max_row][j])) {
-                max_row = t;
+        
+        // B2: Kiểm tra nếu a_ij != 0
+        if (abs(A[i][j]) > 1e-9) { 
+            ind[i] = j; // ind[i] = j => Chuyển sang B3/B4
+            
+            cout << "Lan lap " << step << ": Chon pivot a[" << i+1 << "][" << j+1 << "] = " 
+                 << fixed << setprecision(4) << A[i][j] << "\n";
+
+            // B4: Cho k chạy từ i+1 đến m, thực hiện biến đổi khử
+            for (int k = i + 1; k < m; ++k) {
+                double factor = A[k][j] / A[i][j];
+                for (int c = j; c < n; ++c) { 
+                    A[k][c] -= factor * A[i][c];
+                }
             }
-        }
 
-        // 2. Đổi chỗ hàng nếu phần tử lớn nhất không nằm ở hàng hiện tại
-        if (max_row != i) {
-            swap(A[i], A[max_row]);
-        }
+            if (step == 1) {
+                cout << "\n--- MA TRAN SAU LAN LAP 1 ---\n";
+                printMatrix(A);
+            }
 
-        // 3. Nếu cả cột toàn số 0 (hoặc xấp xỉ 0) thì bỏ qua cột này
-        if (abs(A[i][j]) < 1e-9) {
+            // B5: Tăng i, j (do vòng lặp while đã lo việc check j=n nên ta cứ tăng)
+            i++;
             j++;
-            continue;
-        }
+            step++; 
 
-        // In ra pivot được chọn
-        cout << "Lan lap " << step << ": Chon pivot a[" << i+1 << "][" << j+1 << "] = " 
-             << fixed << setprecision(4) << A[i][j] << "\n";
-
-        // Nếu đã đến hàng cuối cùng thì dừng
-        if (i == m - 1) break; 
-
-        // 4. Khử các phần tử bên dưới thành số 0
-        for (int k = i + 1; k < m; ++k) {
-            double factor = A[k][j] / A[i][j];
-            for (int c = j; c < n; ++c) { 
-                A[k][c] -= factor * A[i][c];
+        } else {
+            // Trái lại thì sang B6: Cho t = i + 1
+            bool found_nonzero = false;
+            
+            for (int t = i + 1; t < m; ++t) {
+                // B7: Kiểm tra nếu a_tj != 0 thì đổi chỗ 2 hàng t và i
+                if (abs(A[t][j]) > 1e-9) {
+                    cout << "[!] Phat hien a["<<i+1<<"]["<<j+1<<"] = 0. Doi cho hang " << i+1 << " va hang " << t+1 << "\n";
+                    swap(A[i], A[t]);
+                    
+                    // ind[i] = j và quay lại B3 (break vòng for t, quay lại vòng while để nó tự đi vào nhánh B2->B4)
+                    found_nonzero = true;
+                    break;
+                }
+            }
+            
+            // B8: Nếu quét hết ở dưới t < m mà không thấy ai != 0 (tức là cột toàn số 0)
+            if (!found_nonzero) {
+                // Tăng cột j = j + 1 và tiếp tục (tương đương quay lại B2)
+                j++; 
             }
         }
-
-        if (step == 1) {
-            cout << "\n--- MA TRAN SAU LAN LAP 1 ---\n";
-            printMatrix(A);
-        }
-
-        i++;
-        j++;
-        step++; 
     }
+
+    // --- IN KẾT QUẢ ĐỂ KIỂM CHỨNG ---
+    cout << "\n--- MANG LUU VI TRI PIVOT (Mang ind) ---\n";
+    cout << "ind = [ ";
+    for (int r = 0; r < m; ++r) {
+        // In theo index 1-based cho giống toán học, nếu -1 thì in 0 (không có)
+        cout << (ind[r] != -1 ? ind[r] + 1 : 0) << " ";
+    }
+    cout << "]\n";
 
     cout << "\n--- MA TRAN BAC THANG (SAU QUY TRINH THUAN) ---\n";
     printMatrix(A);
