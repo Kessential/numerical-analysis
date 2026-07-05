@@ -3,14 +3,14 @@ import sympy as sp
 
 # ==== Sua truc tiep cac muc nay theo de bai (so chieu tu suy ra tu do dai Phi_exprs_str) ====
 Phi_exprs_str = [
-    "(cos(x2*x3) + 0.5) / 3",
-    "(1/25) * sqrt(x1**2 + 0.3125) - 0.03",
-    "-(1/20) * exp(-x1*x2) - (10*pi - 3)/60",
+    "1 - cos(x1*x2*x3)",
+    "1 - (1 - x1)**(1/4) - 0.05*x3**2 + 0.15*x3",
+    "x1**2 + 0.1*x2**2 - 0.01*x2 + 1",
 ]
-X0 = [0.0, 0.0, 0.0]
+X0 = [0.0, 0.1, 0.3]
 epsilon = 1e-6
 max_iter = 100
-D = [(-1, 1), (-1, 1), (-1, 1)]  # mien de uoc luong he so co q tu Jacobi cua Phi
+D = [(-0.1, 0.1), (-0.1, 0.3), (0.5, 1.1)]  # mien de uoc luong he so co q tu Jacobi cua Phi
 # ==============================================================================================
 
 n = len(Phi_exprs_str)
@@ -47,11 +47,21 @@ def main():
     q_row, q_col, K = estimate_q()
     print(f"He so co uoc luong tren D: q_row={q_row:.6f}, q_col={q_col:.6f}, K={K:.6f}")
 
-    q = min(q_row, q_col, K)
-    if q >= 1:
+    # Chuan do sai so phai khop voi chuan sinh ra q: q_row <-> chuan vo cung (max),
+    # q_col <-> chuan 1 (tong). K chan tren ca hai nen dung chuan vo cung cho an toan.
+    candidates = [
+        ("q_row", q_row, "chuan vo cung ||.||_inf (max tri tuyet doi)", lambda d: np.max(np.abs(d))),
+        ("q_col", q_col, "chuan 1 ||.||_1 (tong tri tuyet doi)", lambda d: np.sum(np.abs(d))),
+        ("K", K, "chuan vo cung ||.||_inf (max tri tuyet doi)", lambda d: np.max(np.abs(d))),
+    ]
+
+    valid = [c for c in candidates if c[1] < 1]
+    if not valid:
         print("Canh bao: khong cach nao cho q<1 => chua chac hoi tu tren D da chon!")
         return
-    print(f"=> Chon q = {q:.6f} (< 1) de danh gia sai so\n")
+
+    name, q, norm_label, norm_func = min(valid, key=lambda c: c[1])
+    print(f"=> Chon q = {name} = {q:.6f} (< 1), do sai so bang {norm_label}\n")
 
     tol = epsilon * (1 - q) / q
 
@@ -65,7 +75,7 @@ def main():
 
     for k in range(1, max_iter + 1):
         X_new = np.array(Phi_func(*X), dtype=float).flatten()
-        diff = np.max(np.abs(X_new - X))
+        diff = norm_func(X_new - X)
 
         print(f"{k:>3}" + "".join(f"{v:>15.8f}" for v in X_new) + f"{diff:>15.8f}")
 

@@ -2,15 +2,16 @@ import numpy as np
 import sympy as sp
 
 # ==== Sua truc tiep 2 muc nay theo de bai (so chieu tu suy ra tu do dai) ====
+# Dung ten ham/hang so cua sympy (cos, sin, exp, sqrt, pi, ...), KHONG can tien to "math."
 F_exprs_str = [
-    "10*x1 - 2*x2**2 + x2 - 2*x3 - 5",
-    "8*x2**2 + 4*x3**2 - 9",
-    "8*x2*x3 + 4",
+    "3*x1 - cos(x2*x3) - 1/2",
+    "4*x1**2 - 625*x2**2 + 2*x2 - 1",
+    "exp(-x1*x2) + 20*x3 + (10*pi - 3) / 3",
 ]
 # X0=(0,0,0) lam J(X0) suy bien; X0=(0.1,0.1,-0.1) nhu newton.py lai qua xa nghiem
 # khien Jacobi co dinh sai lech va Newton modified phan ky (mien hoi tu hep hon Newton
 # thuong), nen chon diem gan nghiem hon de hoi tu
-X0 = [0.6, 0.9, -0.4]
+X0 = [0.1, 0.1, 0.1]
 n_iterations = 5
 # =============================================================================
 

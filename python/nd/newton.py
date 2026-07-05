@@ -3,12 +3,11 @@ import sympy as sp
 
 # ==== Sua truc tiep 2 muc nay theo de bai (so chieu tu suy ra tu do dai) ====
 F_exprs_str = [
-    "10*x1 - 2*x2**2 + x2 - 2*x3 - 5",
-    "8*x2**2 + 4*x3**2 - 9",
-    "8*x2*x3 + 4",
+    "4*x1**2 - 20*x1 + 1/4*x2**2 + 8",
+    "1/2*x1*x2**2 + 2*x1 - 5*x2 + 8"
 ]
 # X0=(0,0,0) lam J(X0) suy bien (hang 2, 3 toan so 0), nen doi sang diem gan do
-X0 = [0.1, 0.1, -0.1]
+X0 = [0.0, 0.0]
 n_iterations = 5
 # =============================================================================
 
