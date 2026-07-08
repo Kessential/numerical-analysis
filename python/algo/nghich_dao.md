@@ -57,14 +57,14 @@ Slide gộp chung PP Gauss và PP Gauss-Jordan vì cả hai đều dựa trên c
 **Bước 3 — Quy trình thuận (khử Gauss, đổi hàng khi cần):** với $i = \overline{1,n}$:
 
 * Nếu $a_{ii} = 0$: tìm hàng $t > i$ có $a_{ti} \ne 0$ để đổi chỗ. Nếu không có: dừng, báo **A suy biến, không khả nghịch**.
-* Khử các phần tử bên dưới pivot: $\text{Aug}[t,\,i{:}] \mathrel{-}= \dfrac{a_{ti}}{a_{ii}}\,\text{Aug}[i,\,i{:}], \quad \forall t>i$.
+* Khử các phần tử bên dưới pivot: $\text{Aug}_{tj} \mathrel{-}= \dfrac{a_{ti}}{a_{ii}}\,\text{Aug}_{ij}, \quad \forall t>i,\ j=\overline{i,2n}$.
 
 Sau bước này, phần $A$ của $\text{Aug}$ trở thành ma trận tam giác trên $U$.
 
 **Bước 4 — Quy trình nghịch (thế ngược từng cột của $E$):** với $r = \overline{n,1}$ (giảm dần):
 
 $$
-X_{r,:} = \frac{\text{Aug}[r,\, n{+}1{:}2n] - \sum_{k>r} u_{rk}X_{k,:}}{u_{rr}}
+X_{rc} = \frac{\text{Aug}_{r,\, n+c} - \sum_{k>r} u_{rk}X_{kc}}{u_{rr}}, \quad c = \overline{1,n}
 $$
 
 Kết quả $X = A^{-1}$.
@@ -82,14 +82,14 @@ Kết quả $X = A^{-1}$.
 **Bước 3 — Khử toàn diện (Gauss-Jordan, có chọn khóa từng bước):** lặp $n$ lần, mỗi lần chọn 1 phần tử khóa (pivot) chưa dùng theo hàng/cột (ưu tiên $|a_{rc}|=1$, nếu không có thì chọn $|a_{rc}|$ lớn nhất trong các hàng/cột còn lại):
 
 * Nếu không còn phần tử khóa nào khác 0: dừng, báo **A suy biến, không khả nghịch**.
-* Chuẩn hóa hàng khóa $p$: $\text{Aug}[p,:] \mathrel{/}= \text{Aug}[p,q]$.
-* Khử tất cả các hàng khác (cả trên lẫn dưới) theo cột khóa $q$: $\text{Aug}[r,:] \mathrel{-}= \text{Aug}[r,q]\cdot\text{Aug}[p,:] \; \forall r \ne p$.
+* Chuẩn hóa hàng khóa $p$: $\text{Aug}_{pc} \mathrel{/}= \text{Aug}_{pq}, \quad \forall c=\overline{1,2n}$.
+* Khử tất cả các hàng khác (cả trên lẫn dưới) theo cột khóa $q$: $\text{Aug}_{rc} \mathrel{-}= \text{Aug}_{rq}\cdot\text{Aug}_{pc}, \quad \forall r \ne p,\ c=\overline{1,2n}$.
 * Ghi nhớ $\text{ind}[p] = q$ (hàng $p$ tương ứng ẩn/cột thứ $q$).
 
 **Bước 4 — Kết luận:** vì A vuông và khả nghịch nên sau $n$ bước, mỗi hàng $r$ đã khử xong ứng với $\text{ind}[r]$ là một hoán vị của $\{1,\dots,n\}$. Xếp lại các hàng theo đúng thứ tự ẩn để được nghiệm:
 
 $$
-A^{-1}[\text{ind}[r], :] = \text{Aug}[r,\; n{+}1 : 2n], \quad r = \overline{1,n}
+A^{-1}_{\text{ind}[r],\, c} = \text{Aug}_{r,\, n+c}, \quad r = \overline{1,n},\ c = \overline{1,n}
 $$
 
 (đây chính là công thức $[A\mid E] \Leftrightarrow [E\mid A^{-1}]$ của slide, chỉ khác là có sắp xếp lại hàng do dùng khử toàn phần/full pivoting để ổn định số học.)
@@ -115,7 +115,7 @@ Ba phương pháp này **không có thuật toán mới**: chúng chính là thu
 
 **Bước 1 — Khởi tạo** ($k=1$): Nếu $m_{11}=0$, thông báo A suy biến và dừng thuật toán. Trái lại, gán $M_1^{-1}=[1/m_{11}]$.
 
-**Bước 2 — Với $k=2,\dots,n$, viền thêm 1 hàng + 1 cột:** đặt $\alpha_{k-1,1}=M[1{:}k{-}1,k]$, $\alpha_{1,k-1}=M[k,1{:}k{-}1]$, $m_{kk}=M[k,k]$. Tính trước
+**Bước 2 — Với $k=2,\dots,n$, viền thêm 1 hàng + 1 cột:** đặt $(\alpha_{k-1,1})_i=m_{ik}, \ i=\overline{1,k-1}$ (cột $k$ của $M$, trừ phần tử cuối), $(\alpha_{1,k-1})_j=m_{kj}, \ j=\overline{1,k-1}$ (hàng $k$ của $M$, trừ phần tử cuối). Tính trước
 
 $$
 s = m_{kk} - \alpha_{1,k-1}M_{k-1}^{-1}\alpha_{k-1,1}
