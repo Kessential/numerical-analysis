@@ -34,9 +34,6 @@ $$
 
 * Bước 4.1 — Với $q=1,\dots,m-1$ (đã có $q-1$ cột đầu của $B$ bằng 0): dựng $S_q$ = ma trận đơn vị, với
 
-$$
-(S_q)_{i,\,k+q} = -b^{(q)}_i,\qquad i=\overline{1,k-1}
-$$
 
   (và $(S_q^{-1})_{i,\,k+q}=b^{(q)}_i$, các phần tử khác như ma trận đơn vị). Cập nhật $A\leftarrow S_qAS_q^{-1}$, $P\leftarrow PS_q^{-1}$. Sau bước này cột $q$ của $B$ bằng 0, cột $q+1$ trở thành $A_{k-1}b^{(q)}+b^{(q+1)}$.
 
