@@ -5,7 +5,7 @@ def print_matrix(mat):
     for row in np.atleast_2d(mat):
         for val in row:
             val = 0.0 if abs(val) < 1e-9 else val
-            print(f"{val:10.4f}", end=" ")
+            print(f"{val:14.8f}", end=" ")
         print()
     print()
 

@@ -5,7 +5,7 @@ def print_matrix(mat):
     for row in np.atleast_2d(mat):
         for val in row:
             val = 0.0 if abs(val) < 1e-9 else val
-            print(f"{val:10.4f}", end=" ")
+            print(f"{val:14.8f}", end=" ")
         print()
     print()
 
@@ -21,11 +21,11 @@ def print_poly(coeffs):
         sign = "-" if c < 0 else ("+" if parts else "")
         mag = abs(c)
         if power == 0:
-            term = f"{mag:.4f}"
+            term = f"{mag:.8f}"
         elif power == 1:
-            term = f"{mag:.4f}*lambda"
+            term = f"{mag:.8f}*lambda"
         else:
-            term = f"{mag:.4f}*lambda^{power}"
+            term = f"{mag:.8f}*lambda^{power}"
         parts.append(f"{sign} {term}".strip())
     print(" ".join(parts) if parts else "0")
 
@@ -103,7 +103,7 @@ def danielevsky_reduce(A):
                     split_at = k
                     break
             pivot = A[k, m]
-            print(f"Hang {k + 1}: pivot a[{k + 1}][{m + 1}] = {pivot:.4f} != 0 -> dung M dua hang {k + 1} ve don vi tai cot {m + 1}.")
+            print(f"Hang {k + 1}: pivot a[{k + 1}][{m + 1}] = {pivot:.8f} != 0 -> dung M dua hang {k + 1} ve don vi tai cot {m + 1}.")
             M, Minv = build_M(A, k, m, n)
             A = M @ A @ Minv
             P = P @ Minv
@@ -207,10 +207,10 @@ def main():
     print("=== GIA TRI RIENG VA VECTO RIENG ===")
     for lam, v in results:
         if abs(lam.imag) < 1e-6:
-            print(f"lambda = {lam.real:.4f}")
+            print(f"lambda = {lam.real:.8f}")
         else:
             sign = "+" if lam.imag >= 0 else "-"
-            print(f"lambda = {lam.real:.4f} {sign} {abs(lam.imag):.4f}i")
+            print(f"lambda = {lam.real:.8f} {sign} {abs(lam.imag):.8f}i")
         v_show = v.real if np.all(np.abs(v.imag) < 1e-6) else v
         print_matrix(v_show)
 

@@ -7,11 +7,11 @@ def print_matrix(mat):
             if isinstance(val, complex) or np.iscomplexobj(val):
                 re = 0.0 if abs(val.real) < 1e-9 else val.real
                 im = 0.0 if abs(val.imag) < 1e-9 else val.imag
-                s = f"{re:.4f}" + ("" if im == 0 else f"{'+' if im >= 0 else '-'}{abs(im):.4f}i")
-                print(f"{s:>16}", end=" ")
+                s = f"{re:.8f}" + ("" if im == 0 else f"{'+' if im >= 0 else '-'}{abs(im):.8f}i")
+                print(f"{s:>24}", end=" ")
             else:
                 v = 0.0 if abs(val) < 1e-9 else val
-                print(f"{v:10.4f}", end=" ")
+                print(f"{v:14.8f}", end=" ")
         print()
     print()
 
