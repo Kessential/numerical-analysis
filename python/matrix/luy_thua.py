@@ -34,6 +34,7 @@ def power_method(A, x0=None, eps=1e-6, max_iter=300):
 
     prev_lam1 = None
     prev_pq = None
+    history = []
 
     for k in range(1, max_iter + 1):
         y1 = A @ x
@@ -47,14 +48,17 @@ def power_method(A, x0=None, eps=1e-6, max_iter=300):
         else:
             spread, lam1_est = np.inf, None
 
-        if lam1_est is not None and spread < eps * max(1.0, abs(lam1_est)):
-            if prev_lam1 is not None and abs(lam1_est - prev_lam1) < eps * max(1.0, abs(lam1_est)):
-                v1, _ = normalize_inf(y1)
-                return {"case": 1, "iterations": k, "eigenvalues": [lam1_est], "eigenvectors": [v1]}
-            prev_lam1 = lam1_est
-        else:
-            prev_lam1 = None
+        th1_stable = (
+            lam1_est is not None
+            and spread < eps * max(1.0, abs(lam1_est))
+            and prev_lam1 is not None
+            and abs(lam1_est - prev_lam1) < eps * max(1.0, abs(lam1_est))
+        )
 
+        # Luon tinh truoc he p,q (dung de phan biet TH2/TH3) ngay ca khi TH1 co
+        # ve da on dinh: neu p,q cua chinh vong lap nay cung cho thay dau hieu
+        # 1 cap gia tri rieng doi nhau/phuc lien hop (xem Bug 1, bug_report.md),
+        # thi KHONG duoc chot TH1 voi do on dinh tinh co cua ti so y1[i]/x[i].
         order = np.argsort(-np.abs(x))
         pq = None
         for a in range(n):
@@ -68,6 +72,35 @@ def power_method(A, x0=None, eps=1e-6, max_iter=300):
             if pq is not None:
                 break
 
+        # Nguong "canh bao" phai LONG hon nhieu so voi eps dung de chot TH2/TH3
+        # (o duoi): p hoi tu ve 0 CHAM hon ti so y1[i]/x[i] on dinh, nen tai
+        # dung luc TH1 "co ve" da on dinh (2 vong lien tiep), p thuong van con
+        # cach 0 mot khoang > eps (vi du ~1e-3 lan lon hon) - dung eps truc
+        # tiep se khong bat duoc dau hieu nay (xem Bug 1, bug_report.md).
+        guard_thresh = np.sqrt(eps)
+        pq_indicates_pair = False
+        if pq is not None:
+            p_chk, q_chk = pq
+            delta_chk = p_chk * p_chk - 4 * q_chk
+            if delta_chk >= 0:
+                sq_chk = np.sqrt(delta_chk)
+                lam_a_chk, lam_b_chk = (p_chk + sq_chk) / 2, (p_chk - sq_chk) / 2
+                if abs(p_chk) < guard_thresh * max(1.0, abs(lam_a_chk), abs(lam_b_chk)):
+                    pq_indicates_pair = True
+            else:
+                pq_indicates_pair = True
+
+        history.append((k, lam1_est, x.copy()))
+
+        if th1_stable and not pq_indicates_pair:
+            v1, _ = normalize_inf(y1)
+            return {"case": 1, "iterations": k, "eigenvalues": [lam1_est], "eigenvectors": [v1], "history": history}
+
+        if lam1_est is not None and spread < eps * max(1.0, abs(lam1_est)):
+            prev_lam1 = lam1_est
+        else:
+            prev_lam1 = None
+
         if pq is not None:
             p, q = pq
             if prev_pq is not None and abs(p - prev_pq[0]) < eps * max(1.0, abs(p)) and abs(q - prev_pq[1]) < eps * max(1.0, abs(q)):
@@ -80,18 +113,21 @@ def power_method(A, x0=None, eps=1e-6, max_iter=300):
                     # phuong phap tong quat nay tinh duoc som hon phep thu ti so don gian cua
                     # TH1 (thuong xay ra khi |lambda2/lambda1| khong qua nho) -> tra ve dung
                     # dang TH1 voi gtr co module lon hon, tranh gan nham "TH2".
-                    if abs(p) < eps * max(1.0, abs(lam_a), abs(lam_b)):
+                    # Dung guard_thresh (long hon eps, xem Bug 1 bug_report.md) thay vi eps
+                    # truc tiep: p hoi tu ve 0 cham hon do on dinh cua chinh he p,q, nen voi
+                    # nguong eps qua chat, TH2 that de bi tra ve nham TH1.
+                    if abs(p) < guard_thresh * max(1.0, abs(lam_a), abs(lam_b)):
                         v_b = normalize_inf((y1 - lam_a * x).astype(complex))[0]
                         v_a = normalize_inf((y1 - lam_b * x).astype(complex))[0]
-                        return {"case": 2, "iterations": k, "eigenvalues": [lam_a, lam_b], "eigenvectors": [v_a, v_b]}
+                        return {"case": 2, "iterations": k, "eigenvalues": [lam_a, lam_b], "eigenvectors": [v_a, v_b], "history": history}
                     lam1, lam_other = (lam_a, lam_b) if abs(lam_a) >= abs(lam_b) else (lam_b, lam_a)
                     v1 = normalize_inf(y1 - lam_other * x)[0]
-                    return {"case": 1, "iterations": k, "eigenvalues": [lam1], "eigenvectors": [v1]}
+                    return {"case": 1, "iterations": k, "eigenvalues": [lam1], "eigenvectors": [v1], "history": history}
                 sq = np.sqrt(-delta)
                 lam_a, lam_b = complex(p / 2, sq / 2), complex(p / 2, -sq / 2)
                 v_b = normalize_inf((y1 - lam_a * x).astype(complex))[0]
                 v_a = normalize_inf((y1 - lam_b * x).astype(complex))[0]
-                return {"case": 3, "iterations": k, "eigenvalues": [lam_a, lam_b], "eigenvectors": [v_a, v_b]}
+                return {"case": 3, "iterations": k, "eigenvalues": [lam_a, lam_b], "eigenvectors": [v_a, v_b], "history": history}
             prev_pq = (p, q)
         else:
             prev_pq = None
@@ -100,7 +136,7 @@ def power_method(A, x0=None, eps=1e-6, max_iter=300):
         if scale == 0.0:
             break
 
-    return {"case": 0, "iterations": max_iter, "eigenvalues": [], "eigenvectors": []}
+    return {"case": 0, "iterations": max_iter, "eigenvalues": [], "eigenvectors": [], "history": history}
 
 
 def main():
@@ -131,6 +167,15 @@ def main():
         print(f"\nKhong hoi tu sau {result['iterations']} lan lap: co the co > 2 gtr trien cung module,")
         print("hoac |l1|,|l2| qua gan |l3| nen hoi tu rat cham.")
         return
+
+    history = result["history"]
+    show = sorted(set(range(min(2, len(history)))) | set(range(max(0, len(history) - 2), len(history))))
+    for idx in show:
+        k, lam1_est, x_k = history[idx]
+        lam_str = f"{lam1_est:.6f}" if lam1_est is not None else "(chua uoc luong duoc)"
+        print(f"\n--- Lan lap {k}: uoc luong lambda1 (TH1, ti so y1[i]/x[i]) = {lam_str} ---")
+        print("x^(k) (vector lap, da chuan hoa) =")
+        print_matrix(x_k)
 
     case = result["case"]
     it = result["iterations"]

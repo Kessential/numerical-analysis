@@ -73,20 +73,25 @@ def recover_eigenvector(u, lam1, lam_target, v1, a_s):
 
 def singular_values_right_vectors(A, k, eps=1e-9, max_iter=500):
     """Tim k cap (sigma_i, v_i) lon nhat bang PP luy thua + xuong thang tren
-    M=A^T A (algo/svd.md muc 1). Dung lai khi lambda_k <= eps (het hang cua A)."""
+    M=A^T A (algo/svd.md muc 1). Dung lai khi lambda_k <= eps (het hang cua A).
+    Tra ve them list `converged` (song song voi sigmas/vs): False o phan tu
+    cuoi cung neu buoc do PP luy thua khong hoi tu (gia tri chi la uoc luong
+    tam thoi, khong dung de xuong thang tiep)."""
     M = A.T @ A
     M_cur = M
     chain = []
-    sigmas, vs = [], []
+    sigmas, vs, convs = [], [], []
 
     for step in range(1, k + 1):
         lam, v_cur, _, converged = power_method_symmetric(M_cur, eps=eps, max_iter=max_iter)
+
+        if lam <= eps and converged:
+            break
+
         if not converged:
             print(f"Canh bao: PP luy thua khong hoi tu sau {max_iter} lan lap o buoc {step}"
-                  " (2 gia tri ky di ke nhau qua gan nhau) - dung lai o day.")
-            break
-        if lam <= eps:
-            break
+                  " (2 gia tri ky di ke nhau qua gan nhau) - sigma va v duoi day CHI LA UOC LUONG"
+                  " TAM THOI, do tin cay thap; dung xuong thang tai day.")
 
         v = v_cur
         for lam_j, v_j, a_j in reversed(chain):
@@ -94,15 +99,19 @@ def singular_values_right_vectors(A, k, eps=1e-9, max_iter=500):
         v, _ = normalize_inf(v)
         v = v / np.linalg.norm(v)
 
-        sigmas.append(np.sqrt(lam))
+        sigmas.append(np.sqrt(max(lam, 0.0)))
         vs.append(v)
+        convs.append(converged)
+
+        if not converged:
+            break
 
         if step < k:
             M_next, s, a_s, v1n = deflate(M_cur, v_cur)
             chain.append((lam, v1n, a_s))
             M_cur = M_next
 
-    return sigmas, vs
+    return sigmas, vs, convs
 
 
 def main():
@@ -121,15 +130,24 @@ def main():
     print(f"--- MA TRAN A ({m} x {n}) ---")
     print_matrix(A)
 
+    if np.allclose(A, 0.0):
+        print("A = 0 (hoac gan bang 0): khong co gia tri ky di khac 0.")
+        return
+
     eps = float(input("Nhap sai so cho phep epsilon (vi du 1e-9): "))
     r_max = int(input(f"Nhap so gia tri ky di can tim (toi da {min(m, n)}): "))
 
-    sigmas, vs = singular_values_right_vectors(A, r_max, eps=eps)
+    sigmas, vs, convs = singular_values_right_vectors(A, r_max, eps=eps)
 
     print(f"\n=== Tim duoc {len(sigmas)} gia tri ky di ===")
-    for i, (sig, v) in enumerate(zip(sigmas, vs), start=1):
-        print(f"sigma_{i} = {sig:.6f}, v_{i} =")
+    for i, (sig, v, conv) in enumerate(zip(sigmas, vs, convs), start=1):
+        tag = "" if conv else " (KHONG hoi tu - uoc luong tam thoi)"
+        print(f"sigma_{i} = {sig:.6f}{tag}, v_{i} =")
         print_matrix(v)
+        if sig > 1e-12:
+            u = A @ v / sig
+            print(f"u_{i} (vector ky di trai) =")
+            print_matrix(u)
 
     print("--- (Doi chieu) numpy.linalg.svd ---")
     _, S_np, _ = np.linalg.svd(A)

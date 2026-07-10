@@ -89,6 +89,10 @@ def main():
     else:
         print("=> Ma tran A khong doi xung: chuyen ve giai M x = d voi M = A^T.A, d = A^T.b\n")
         M, D = A.T @ A, A.T @ B
+        print(f"--- MA TRAN M = A^T.A ({M.shape[0]} x {M.shape[1]}) ---")
+        print_matrix(M)
+        print(f"--- MA TRAN D = A^T.B ({D.shape[0]} x {D.shape[1]}) ---")
+        print_matrix(D)
 
     U = cholesky_decompose(M)
     if U is None:

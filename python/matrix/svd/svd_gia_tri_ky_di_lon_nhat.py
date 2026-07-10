@@ -70,7 +70,7 @@ def largest_singular_triplet(A, eps=1e-9, max_iter=500):
     v1 = v1 / np.linalg.norm(v1)
     sigma1 = np.sqrt(lam1)
     u1 = A @ v1 / sigma1
-    return sigma1, v1, u1, it
+    return sigma1, v1, u1, it, converged
 
 
 def main():
@@ -94,9 +94,12 @@ def main():
     result = largest_singular_triplet(A, eps=eps)
     if result is None:
         return
-    sigma1, v1, u1, it = result
+    sigma1, v1, u1, it, converged = result
 
-    print(f"\n=== Gia tri ky di lon nhat (hoi tu sau {it} lan lap) ===")
+    if converged:
+        print(f"\n=== Gia tri ky di lon nhat (hoi tu sau {it} lan lap) ===")
+    else:
+        print(f"\n=== Gia tri ky di lon nhat (KHONG hoi tu sau {it} lan lap - ket qua uoc luong tam thoi, DO TIN CAY THAP) ===")
     print(f"sigma_1 = {sigma1:.6f}")
     print("v_1 (vector ky di phai) =")
     print_matrix(v1)

@@ -60,14 +60,23 @@ def condition_number(A, eps=1e-9, max_iter=500):
     if not conv_max:
         print(f"Canh bao: PP luy thua tim sigma_max khong hoi tu sau {max_iter} lan lap.")
 
+    sigma_max = np.sqrt(lam_max)
+
+    if abs(np.linalg.det(M)) < 1e-12:
+        print("Canh bao: M = A^T.A gan suy bien (det ~ 0) -> sigma_min ~ 0 -> cond(A) = +inf.")
+        return sigma_max, 0.0, float("inf"), it_max, 0
+
     M_inv = np.linalg.inv(M)
     mu_max, _, it_min, conv_min = power_method_symmetric(M_inv, eps=eps, max_iter=max_iter)
     if not conv_min:
         print(f"Canh bao: PP luy thua nghich dao tim sigma_min khong hoi tu sau {max_iter} lan lap.")
     lam_min = 1.0 / mu_max
-
-    sigma_max = np.sqrt(lam_max)
     sigma_min = np.sqrt(lam_min)
+
+    if sigma_min < eps:
+        print(f"Canh bao: sigma_min = {sigma_min:.3e} ~ 0 (A gan suy bien) -> cond(A) = +inf.")
+        return sigma_max, sigma_min, float("inf"), it_max, it_min
+
     return sigma_max, sigma_min, sigma_max / sigma_min, it_max, it_min
 
 

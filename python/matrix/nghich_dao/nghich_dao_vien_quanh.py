@@ -32,10 +32,13 @@ def bordering_inverse(M):
 
     inv = np.array([[1.0 / M[0, 0]]])
 
+    show = sorted(set(range(min(2, n))) | set(range(max(0, n - 2), n)))
+
     print("--- Buoc k = 1 ---")
     print("M_1^-1 =")
     print_matrix(inv)
 
+    skipped_msg_done = False
     for k in range(2, n + 1):
         alpha_col = M[: k - 1, k - 1]  # alpha_{k-1,1}: cot cuoi, tru phan tu goc
         alpha_row = M[k - 1, : k - 1]  # alpha_{1,k-1}: hang cuoi, tru phan tu goc
@@ -62,9 +65,21 @@ def bordering_inverse(M):
 
         inv = new_inv
 
-        print(f"--- Buoc k = {k} ---")
-        print(f"M_{k}^-1 =")
-        print_matrix(inv)
+        if k - 1 in show:
+            print(f"--- Buoc k = {k} ---")
+            print(f"s = m_{k}{k} - alpha_(1,{k-1}).M_{k-1}^-1.alpha_({k-1},1) = {s:.8f}")
+            print(f"b_{k}{k} = 1/s = {b_kk:.8f}")
+            print(f"beta_({k-1},1) (cot) =")
+            print_matrix(beta_col.reshape(-1, 1))
+            print(f"beta_(1,{k-1}) (hang) =")
+            print_matrix(beta_row.reshape(1, -1))
+            print(f"B_{k-1} =")
+            print_matrix(B)
+            print(f"M_{k}^-1 =")
+            print_matrix(inv)
+        elif not skipped_msg_done:
+            print("... (bo qua cac buoc giua, chi hien 2 buoc dau va 2 buoc cuoi) ...")
+            skipped_msg_done = True
 
     return inv
 

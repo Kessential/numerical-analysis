@@ -35,7 +35,8 @@ def gauss_seidel_iterate(A, B, eps, max_iter=1000):
     diag = np.diag(A)
 
     if np.any(np.abs(diag) < 1e-9):
-        print("Loi: co phan tu duong cheo a[i][i] = 0 -> khong the lap Gauss-Seidel!")
+        bad = np.where(np.abs(diag) < 1e-9)[0] + 1
+        print(f"Loi: co phan tu duong cheo a[i][i] = 0 tai i = {bad.tolist()} -> khong the lap Gauss-Seidel!")
         return None, 0
 
     row_dominant, col_dominant = check_dominance(A)
@@ -75,6 +76,11 @@ def gauss_seidel_iterate(A, B, eps, max_iter=1000):
     print("--- MA TRAN U_A ---")
     print_matrix(U_A)
 
+    def fmt_err(err_it, diff_it):
+        if q < 1:
+            return f"sai so hau nghiem uoc luong = {err_it:.6g}"
+        return f"khong uoc luong duoc sai so hau nghiem (q >= 1) - sai so thuc te giua 2 lan lap = {diff_it:.6g}"
+
     p = B.shape[1]
     first_two = {}
     last_two = deque(maxlen=2)
@@ -88,8 +94,8 @@ def gauss_seidel_iterate(A, B, eps, max_iter=1000):
         post_err = q / ((1 - s) * (1 - q)) * diff if q < 1 else float("inf")
 
         if it <= 2:
-            first_two[it] = (X_next.copy(), post_err)
-        last_two.append((it, X_next.copy(), post_err))
+            first_two[it] = (X_next.copy(), post_err, diff)
+        last_two.append((it, X_next.copy(), post_err, diff))
 
         if post_err < eps or it == max_iter:
             break
@@ -99,16 +105,23 @@ def gauss_seidel_iterate(A, B, eps, max_iter=1000):
     last_its = {item[0] for item in last_two}
     for it in (1, 2):
         if it in first_two and it not in last_its:
-            X_it, err_it = first_two[it]
-            print(f"\n--- LAN LAP {it}: sai so hau nghiem uoc luong = {err_it:.6g} ---")
+            X_it, err_it, diff_it = first_two[it]
+            print(f"\n--- LAN LAP {it}: {fmt_err(err_it, diff_it)} ---")
             print_matrix(X_it)
 
-    for i, (it, X_it, err_it) in enumerate(last_two):
+    for i, (it, X_it, err_it, diff_it) in enumerate(last_two):
         label = "CUOI" if i == len(last_two) - 1 else "AP CHOT"
-        print(f"\n--- LAN LAP {it} ({label}): sai so hau nghiem uoc luong = {err_it:.6g} ---")
+        print(f"\n--- LAN LAP {it} ({label}): {fmt_err(err_it, diff_it)} ---")
         print_matrix(X_it)
 
-    last_it, X_last, _ = last_two[-1]
+    last_it, X_last, last_err, _ = last_two[-1]
+    if q >= 1 or last_err >= eps:
+        print(
+            f"\nCANH BAO: sau {last_it} lan lap (toi da) van chua dat sai so yeu cau "
+            f"(q = {q:.6f} {'>= 1: khong dam bao hoi tu' if q >= 1 else f'< 1 nhung sai so hau nghiem = {last_err:.6g} >= eps = {eps:.6g}'}). "
+            "Ket qua co the khong dang tin cay (dac biet la ma tran nghich dao xap xi)."
+        )
+
     return X_last, last_it
 
 

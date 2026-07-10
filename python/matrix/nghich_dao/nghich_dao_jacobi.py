@@ -26,23 +26,24 @@ def jacobi_iterate(A, B, eps, max_iter=1000):
     diag = np.diag(A)
 
     if np.any(np.abs(diag) < 1e-9):
-        print("Loi: co phan tu duong cheo a[i][i] = 0 -> khong the dung ma tran T!")
+        bad = np.where(np.abs(diag) < 1e-9)[0] + 1
+        print(f"Loi: co phan tu duong cheo a[i][i] = 0 tai i = {bad.tolist()} -> khong the dung ma tran T!")
         return None, 0
 
     row_dominant, col_dominant = check_dominance(A)
 
     if row_dominant:
-        print("=> Ma tran A cheo troi hang: dung chuan vo cung ||.||_inf, lambda = 1.")
         norm_ord = np.inf
         lam = 1.0
+        print(f"=> Ma tran A cheo troi hang: dung chuan vo cung ||.||_inf, lambda = {lam:.6f}.")
     elif col_dominant:
-        print("=> Ma tran A cheo troi cot: dung chuan 1 ||.||_1, lambda = max|aii| / min|aii|.")
         norm_ord = 1
         lam = np.max(np.abs(diag)) / np.min(np.abs(diag))
+        print(f"=> Ma tran A cheo troi cot: dung chuan 1 ||.||_1, lambda = max|aii| / min|aii| = {lam:.6f}.")
     else:
-        print("Canh bao: A khong cheo troi hang cung khong cheo troi cot -> khong dam bao hoi tu!")
         norm_ord = np.inf
         lam = 1.0
+        print(f"Canh bao: A khong cheo troi hang cung khong cheo troi cot -> khong dam bao hoi tu! (coi nhu cheo troi hang, lambda = {lam:.6f})")
 
     T = np.diag(1.0 / diag)
 
@@ -61,6 +62,11 @@ def jacobi_iterate(A, B, eps, max_iter=1000):
     print("--- MA TRAN D = T.E ---")
     print_matrix(D)
 
+    def fmt_err(err_it, diff_it):
+        if q < 1:
+            return f"sai so hau nghiem uoc luong = {err_it:.6g}"
+        return f"khong uoc luong duoc sai so hau nghiem (q >= 1) - sai so thuc te giua 2 lan lap = {diff_it:.6g}"
+
     first_two = {}
     last_two = deque(maxlen=2)
     x_prev = D.copy()
@@ -70,8 +76,8 @@ def jacobi_iterate(A, B, eps, max_iter=1000):
         post_err = lam * q / (1 - q) * diff if q < 1 else float("inf")
 
         if it <= 2:
-            first_two[it] = (x_next.copy(), post_err)
-        last_two.append((it, x_next.copy(), post_err))
+            first_two[it] = (x_next.copy(), post_err, diff)
+        last_two.append((it, x_next.copy(), post_err, diff))
 
         if post_err < eps or it == max_iter:
             break
@@ -81,16 +87,23 @@ def jacobi_iterate(A, B, eps, max_iter=1000):
     last_its = {item[0] for item in last_two}
     for it in (1, 2):
         if it in first_two and it not in last_its:
-            X_it, err_it = first_two[it]
-            print(f"\n--- LAN LAP {it}: sai so hau nghiem uoc luong = {err_it:.6g} ---")
+            X_it, err_it, diff_it = first_two[it]
+            print(f"\n--- LAN LAP {it}: {fmt_err(err_it, diff_it)} ---")
             print_matrix(X_it)
 
-    for i, (it, X_it, err_it) in enumerate(last_two):
+    for i, (it, X_it, err_it, diff_it) in enumerate(last_two):
         label = "CUOI" if i == len(last_two) - 1 else "AP CHOT"
-        print(f"\n--- LAN LAP {it} ({label}): sai so hau nghiem uoc luong = {err_it:.6g} ---")
+        print(f"\n--- LAN LAP {it} ({label}): {fmt_err(err_it, diff_it)} ---")
         print_matrix(X_it)
 
-    last_it, X_last, _ = last_two[-1]
+    last_it, X_last, last_err, _ = last_two[-1]
+    if q >= 1 or last_err >= eps:
+        print(
+            f"\nCANH BAO: sau {last_it} lan lap (toi da) van chua dat sai so yeu cau "
+            f"(q = {q:.6f} {'>= 1: khong dam bao hoi tu' if q >= 1 else f'< 1 nhung sai so hau nghiem = {last_err:.6g} >= eps = {eps:.6g}'}). "
+            "Ket qua co the khong dang tin cay (dac biet la ma tran nghich dao xap xi)."
+        )
+
     return X_last, last_it
 
 

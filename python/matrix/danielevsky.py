@@ -47,10 +47,22 @@ def build_M(A, k, m, n):
     return M, Minv
 
 
-def solve_coupling(Ak, F, B):
+def solve_coupling(Ak, F, B, rel_threshold=1e-6):
     """Giai K (k x m) tu he Sylvester Ak.K - K.F = B, voi F la khoi Frobenius
     (dong 0 chua he so -p_i, duoi duong cheo phu la 1). Dung de day B ve 0
-    (buoc S_q trong slide) ma khong lam thay doi F va Ak."""
+    (buoc S_q trong slide) ma khong lam thay doi F va Ak.
+
+    He suy bien CHINH XAC (Ak, F co tri rieng trung tuyet doi) duoc numpy tu
+    bao bang LinAlgError. Nhung khi 2 tri rieng chi RAT GAN nhau (khong trung
+    bit-for-bit, truong hop thuc te pho bien voi du lieu tuy y), lhs gan suy
+    bien nhung np.linalg.solve van "thanh cong" ve mat so hoc, tra ve K bi
+    khuech dai sai so lam tron rat lon ma khong bao gi ca. Dung so dieu kien
+    np.linalg.cond KHONG hop ly o day vi lhs thuong la 1x1 (khoi Frobenius co
+    kich thuoc pho bien nhat) - cond cua ma tran 1x1 luon = 1 bat ke gia tri
+    do gan 0 den dau, nen se khong bao gio bat duoc canh bao. Thay vao do so
+    sanh tri ky di nho nhat cua lhs voi ty le tuong doi so voi do lon cac
+    phan tu cua no (xem bug_report.md, danielevsky).
+    Tra ve (K, ill_conditioned, sigma_min(lhs))."""
     k = Ak.shape[0]
     m = F.shape[0]
     p = -F[0, :]
@@ -64,12 +76,15 @@ def solve_coupling(Ak, F, B):
 
     lhs = Ak @ Rs[-1] + p[m - 1] * I_k
     rhs = Ak @ ds[-1] + B[:, m - 1]
+    sigma_min = np.linalg.svd(lhs, compute_uv=False)[-1]
+    scale = max(np.max(np.abs(lhs)), 1.0)
+    ill_conditioned = sigma_min < rel_threshold * scale
     K0 = np.linalg.solve(lhs, rhs)
 
     K = np.zeros((k, m))
     for j in range(m):
         K[:, j] = Rs[j] @ K0 - ds[j]
-    return K
+    return K, ill_conditioned, sigma_min
 
 
 def danielevsky_reduce(A):
@@ -96,6 +111,8 @@ def danielevsky_reduce(A):
                 if j_found is not None:
                     print(f"Hang {k + 1}: a[{k + 1}][{m + 1}] = 0 -> hoan doi hang/cot {j_found + 1} <-> {m + 1}.")
                     C = swap_matrix(n, j_found, m)
+                    print("Ma tran hoan doi C =")
+                    print_matrix(C)
                     A = C @ A @ C
                     P = P @ C
                 else:
@@ -105,6 +122,10 @@ def danielevsky_reduce(A):
             pivot = A[k, m]
             print(f"Hang {k + 1}: pivot a[{k + 1}][{m + 1}] = {pivot:.8f} != 0 -> dung M dua hang {k + 1} ve don vi tai cot {m + 1}.")
             M, Minv = build_M(A, k, m, n)
+            print(f"Ma tran M_{k + 1} =")
+            print_matrix(M)
+            print(f"Ma tran M_{k + 1}^-1 =")
+            print_matrix(Minv)
             A = M @ A @ Minv
             P = P @ Minv
             k -= 1
@@ -120,8 +141,12 @@ def danielevsky_reduce(A):
                     print(f"Triet tieu khoi lien ket B ({k}x{size}) giua phan 1..{k} va khoi Frobenius {k + 1}..{r}:")
                     print_matrix(Bc)
                     try:
-                        K = solve_coupling(Ak, F, Bc)
+                        K, ill_conditioned, sigma_min_val = solve_coupling(Ak, F, Bc)
                     except np.linalg.LinAlgError:
+                        ill_conditioned, sigma_min_val = False, None
+                        K = None
+
+                    if K is None:
                         print(
                             f"CANH BAO: he Sylvester Ak.K - K.F = B suy bien (phan 1..{k} va khoi Frobenius "
                             f"{k + 1}..{r} co chung tri rieng - ma tran co tri rieng boi/derogatory). "
@@ -129,10 +154,23 @@ def danielevsky_reduce(A):
                             "cac khoi van dung, nhung vecto rieng ung voi khoi nay co the KHONG chinh xac."
                         )
                     else:
+                        if ill_conditioned:
+                            print(
+                                f"CANH BAO: he Sylvester Ak.K - K.F = B GAN suy bien (sigma_min(lhs) = {sigma_min_val:.3e},"
+                                f" phan 1..{k} va khoi Frobenius {k + 1}..{r} co tri rieng RAT GAN nhau du khong"
+                                " trung tuyet doi). K tim duoc co the bi khuech dai sai so lam tron rat lon ->"
+                                " vecto rieng ung voi khoi nay co the KHONG chinh xac."
+                            )
+                        print(f"Ma tran K (triet tieu B) =")
+                        print_matrix(K)
                         S = np.eye(n)
                         S[:k, k:r] = K
                         Sinv = np.eye(n)
                         Sinv[:k, k:r] = -K
+                        print("Ma tran S =")
+                        print_matrix(S)
+                        print("Ma tran S^-1 =")
+                        print_matrix(Sinv)
                         A = S @ A @ Sinv
                         P = P @ Sinv
                         print("-> Sau khi triet tieu, B =")
@@ -171,6 +209,8 @@ def eigen_from_blocks(F, P, blocks):
             scale = v[np.argmax(np.abs(v))]
             if abs(scale) > 1e-12:
                 v = v / scale
+            else:
+                print(f"CANH BAO: khong chuan hoa duoc vector rieng ung lambda = {lam} (scale ~ 0).")
             results.append((lam, v))
     return results
 
